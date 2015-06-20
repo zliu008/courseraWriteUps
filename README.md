@@ -1,10 +1,9 @@
 # courseraWriteUps
 
-# courseraWriteUps
-
 This folder contains two coursera writeups by now.
+
 (1) Getting and Cleaning data: (run_Analysis.R)
-   (a) There is a simple R script to read the data from .txt to the corresponding variable. The file name is used as variable name, for example  features <-read.table("features.txt");
+   (a) There is a simple R script to read the data from .txt to the corresponding variable. The file name is used as variable name, for example  features <-read.table("features.txt"); That is to say, run_Analysis.R should be placed at the main directory, that is where features.txt locates. 
 
    (b) train data and test data are handled seperately and merged together. 
    
