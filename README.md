@@ -3,7 +3,7 @@
 # courseraWriteUps
 
 This folder contains two coursera writeups by now.
-(1) Getting and Cleaning data
+(1) Getting and Cleaning data: (run_Analysis.R)
    (a) There is a simple R script to read the data from .txt to the corresponding variable. The file name is used as variable name, for example  features <-read.table("features.txt");
 
    (b) train data and test data are handled seperately and merged together. 
@@ -36,5 +36,5 @@ This folder contains two coursera writeups by now.
 
    
 
-(2) Practical machine learning
+(2) Practical machine learning (projectWriteUp.Rmd and projectWriteUp.html)
   This submission contains two report files, the Rmarkdown file to generate the htlm and the htlm file. 
