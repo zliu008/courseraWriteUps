@@ -1,0 +1,148 @@
+Project Report for Practical Marchine Learning
+===============================================
+
+Problem discription
+-----------------------
+Different manners of excercise lead to
+different training results. This study targets to build a prediction model 
+to predict the training classes of performing barbell lifts correctly and 
+incorrectly based on the reading from the accelerometers on the belt, forearm, arm,
+and dumbell . The original data for this study can be fount at
+ http://groupware.les.inf.puc-rio.br/har. 
+
+Choice of machine learning algorithm
+--------------------------------------
+Since the training classes are divided into 5 different categories, it is
+a multi-level classification problem. Methods like logistical regression, 
+support vector machines are suitable for 1 and 0 classifications. Hence, to
+perform multi-level classification, algorithms like decision tree should be 
+used. However, the decision tree is prone to overfitting, and the trade of between 
+bias and variance could be difficult when using decision tree. Thus, 
+to overcome the overfitting problem, bootstrap aggregation, normally called
+bagging needs to be used. By using decision tree with bagging, it leads to 
+a new algorithm called random forest. Hence, in this project, random forest
+is chosen as the machine learning algorithm for this multi-level prediction 
+problems. Random forest also uses the out-of-bag (oob) error to estimate 
+the prediction error, and thus, in this project, to pass the 20 testing 
+cases, the prediction error should be < 5%. The algorithm of random forest
+is written as below. 
+
+
+~~~
+RandomForest(D)
+for n = 1:N
+   (1) bootstrapping with the full set D to obtain the subset Dt.
+   (2) training the decision trees on the subset Dt to obtain the hypothesis of the decision tree as gt.
+return random forest hypothesis RF = uniform voting of gt
+~~~
+
+Choice of predictors
+-------------------------------
+Common sense or domain knowledge could be served as the initial pass of choosing
+predictors. For more detailed choice, permutation of each predictor should be applied
+to determine whether that particular predictor is signficant or not. However, this 
+really requires huge computation sources considering the total number of the predictors. 
+Thus, limited by the computation power available in this project, the choice of the predictors are primarily based on the following
+two criteria:
+-- The availability of the data: Many columns has data as NA, and thus are poor predictors that could
+be eliminated the the first pass.
+-- Common sense are used: For example, the accelerometers on the belts are definitely needed,
+that are the column with "roll_belt", "pitch_belt", "yaw_belt". Also, the "total_accel_belt" do not need
+to be included because it is the summation of "roll_belt", "pitch_belt", "yaw_belt", which means that "total_accel_belt"
+is not an indpendent variable. 
+
+Hence, after reading in the training data, the final choice of the predictors can summarized by the following R codes. 
+
+~~~
+pml_training_raw<-read.csv("pml-training.csv")
+selectedCol <- c(grep("raw_timestamp", names(pml_training_raw)),
+		 which(names(pml_training_raw) == "roll_belt"),
+                 which(names(pml_training_raw) == "pitch_belt"),
+                 which(names(pml_training_raw) == "yaw_belt"),
+                 grep("gyros_", names(pml_training_raw)),
+                 grep("magnet_", names(pml_training_raw)),
+                 which(names(pml_training_raw) == "roll_arm"),
+                 which(names(pml_training_raw) == "pitch_arm"),
+                 which(names(pml_training_raw) == "yaw_arm"),
+                 which(names(pml_training_raw) == "roll_dumbbell"),
+                 which(names(pml_training_raw) == "pitch_dumbbell"),
+                 which(names(pml_training_raw) == "yaw_dumbbell"),
+                 which(names(pml_training_raw) == "classe")
+
+		 )
+~~~
+Training Results
+-------------------------------
+The training of random forest can be done through the following code by using the default settings, 
+where "rf" stands for random forest method is used in training. 
+
+~~~
+pml_training <- pml_training_raw[,selectedCol]
+train_predictors <- pml_training[, -which(names(pml_training) == "classe")]
+modelFit<-train(pml_training$classe ~ ., method="rf", data=train_predictors)
+~~~
+
+The training results can be summarized as the following with the OOB estimation as
+
+~~~
+ randomForest(x = x, y = y, mtry = param$mtry) 
+               Type of random forest: classification
+                     Number of trees: 500
+No. of variables tried at each split: 2
+
+        OOB estimate of  error rate: 1.68%
+Confusion matrix:
+     A    B    C    D    E class.error
+A 5554    8   10    6    2 0.004659498
+B   56 3700   34    3    4 0.025546484
+C    5   29 3360   21    7 0.018118060
+D    6    4   92 3108    6 0.033582090
+E    2    9   16   10 3570 0.010257832
+~~~
+
+It shows OOB erorr of 1.68%, which is below 5%, and it is easy to confirm that all the 20 test cases can
+be passed with this model.
+
+Default setting choose 500 trees, and it is easy to show the error have already been bounded by choosing 500 trees,
+and it still may be possible to reduce the
+number of trees as demontrated by the following error plot. 
+
+```{r plot1, fig.width=8, fig.height=6, message = FALSE}
+plot(modelFit$final)
+```
+
+To make the model simpler and more compact, the next training uses only 90 trees. Also, 
+from the plot showing before, it appears that 90 trees achieves the best accuracy. 
+~~~
+modelFit_90t<-train(pml_training$classe ~ ., method="rf", data=train_predictors, ntree = 90)
+~~~
+The resulting model with OOB error estimation can be shown as the following, which does
+show even smaller OOB error estimation comparing with the default training that uses 500 trees. This model could
+also pass the 20 testing cases. 
+
+~~~
+ randomForest(x = x, y = y, ntree = 90, mtry = param$mtry) 
+               Type of random forest: classification
+                     Number of trees: 90
+No. of variables tried at each split: 18
+
+        OOB estimate of  error rate: 0.12%
+Confusion matrix:
+     A    B    C    D    E  class.error
+A 5577    2    0    1    0 0.0005376344
+B    2 3790    5    0    0 0.0018435607
+C    0    6 3415    1    0 0.0020455874
+D    0    0    2 3211    3 0.0015547264
+E    0    0    0    2 3605 0.0005544774
+~~~
+
+```{r plot2, fig.width=8, fig.height=6, message = FALSE}
+plot(modelFit_90t$final)
+```
+
+Summary
+-----------
+The prediction model for this study could be built from random forest. The default setting of random forest training
+could satisfy the requirements of passing the 20 test cases. By inspecting the error plots and use 90 trees, the
+OOB error estimation could be further reduced, which indicates improved accuracy. 
+
