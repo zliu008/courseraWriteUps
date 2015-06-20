@@ -36,5 +36,5 @@ This folder contains two coursera writeups by now.
 
    
 
-(2) Practical machine learning (projectWriteUp.Rmd and projectWriteUp.html)
+(2) Practical machine learning (ProjectWriteUp.Rmd and ProjectWriteUp.html)
   This submission contains two report files, the Rmarkdown file to generate the htlm and the htlm file. 
